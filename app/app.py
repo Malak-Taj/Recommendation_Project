@@ -13,13 +13,13 @@ st.set_page_config(
 )
 
 # Path
-METADATA_PATH = r"Recommendation_Project/metadata"
+METADATA_PATH = r"app/metadata"
 
 # Load data
 @st.cache_resource
 def load_data():
     movies_content = pd.read_pickle(METADATA_PATH + "movies_content.pkl")
-    tfidf_matrix = joblib.load(METADATA_PATH + "tfidf_matrix.pkl")
+    tfidf_matrix = pd.read_pickle(METADATA_PATH + "tfidf_matrix.pkl")
     return movies_content, tfidf_matrix
 
 movies_content, tfidf_matrix = load_data()
