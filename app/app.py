@@ -1,47 +1,52 @@
 import streamlit as st
 import joblib
 import pandas as pd
-import numpy as np
 from pathlib import Path
-import tempfile
-import os
 
+# -------------------------------
 # Page config
+# -------------------------------
 st.set_page_config(
     page_title="Movie Recommender",
     page_icon="🎬",
     layout="wide"
 )
 
+# -------------------------------
 # Paths
+# -------------------------------
 BASE_DIR = Path(__file__).resolve().parent
-METADATA_PATH = BASE_DIR / "metadata" 
+METADATA_PATH = BASE_DIR / "metadata"       # inside app/
+DATA_PATH = BASE_DIR.parent / "data"        # outside app/
 
-# Load data
+# -------------------------------
+# Load metadata (pickles)
+# -------------------------------
 @st.cache_data
-def load_data():
+def load_metadata():
     movies_content = pd.read_pickle(METADATA_PATH / "movies_content.pkl")
-    tfidf_matrix = pd.read_pickle(METADATA_PATH / "tfidf_matrix.pkl")
+    tfidf_matrix = joblib.load(METADATA_PATH / "tfidf_matrix.pkl")  # use joblib for matrices
     return movies_content, tfidf_matrix
 
-movies_content, tfidf_matrix = load_data()
+movies_content, tfidf_matrix = load_metadata()
 
-
-# Movie card
+# -------------------------------
+# Movie card UI function
+# -------------------------------
 def movie_card(title, genres, score):
     with st.container():
         st.subheader(title)
         st.caption(f"🎭 Genres: {genres}")
-        st.progress(min(score,1.0))
+        st.progress(min(score, 1.0))
         st.caption(f"Similarity: {score*100:.0f}%")
 
-
-
-# Recommendation logic 
-def recommend(movie_title, top_n=10):  # 10 recommendations
+# -------------------------------
+# Recommendation logic
+# -------------------------------
+def recommend(movie_title, top_n=10):
     idx = movies_content[movies_content["title"] == movie_title].index[0]
 
-    # cosine similarity using sparse dot
+    # cosine similarity using sparse dot product
     similarity_scores = tfidf_matrix.dot(tfidf_matrix[idx].T).toarray().flatten()
 
     sim_scores = list(enumerate(similarity_scores))
@@ -52,9 +57,9 @@ def recommend(movie_title, top_n=10):  # 10 recommendations
 
     return indices, scores
 
-
-
-# UI
+# -------------------------------
+# Streamlit UI
+# -------------------------------
 st.title("🎬 Movie Recommendation System")
 st.markdown("")
 
@@ -69,7 +74,7 @@ if st.button("Click To Find Similar Movies"):
 
     st.subheader("Recommended Movies!")
 
-    # 2 rows of 5 columns
+    # display in 2 rows of 5
     cols = st.columns(5)
     for i in range(5):
         row = movies_content.iloc[indices[i]]
