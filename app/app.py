@@ -2,6 +2,7 @@ import streamlit as st
 import joblib
 import pandas as pd
 import numpy as np
+from pathlib import Path
 import tempfile
 import os
 
@@ -12,14 +13,15 @@ st.set_page_config(
     layout="wide"
 )
 
-# Path
-METADATA_PATH = r"app/metadata"
+# Paths
+BASE_DIR = Path(__file__).resolve().parent
+METADATA_PATH = BASE_DIR / "metadata" 
 
 # Load data
-@st.cache_resource
+@st.cache_data
 def load_data():
-    movies_content = pd.read_pickle(METADATA_PATH + "movies_content.pkl")
-    tfidf_matrix = pd.read_pickle(METADATA_PATH + "tfidf_matrix.pkl")
+    movies_content = pd.read_pickle(METADATA_PATH / "movies_content.pkl")
+    tfidf_matrix = pd.read_pickle(METADATA_PATH / "tfidf_matrix.pkl")
     return movies_content, tfidf_matrix
 
 movies_content, tfidf_matrix = load_data()
