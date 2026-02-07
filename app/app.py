@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # Path
-METADATA_PATH = r"C:\Users\connect\Downloads\Recommendation_Project\metadata\\"
+METADATA_PATH = r"Recommendation_Project/metadata"
 
 # Load data
 @st.cache_resource
