@@ -3,36 +3,31 @@ import joblib
 import pandas as pd
 from pathlib import Path
 
-# -------------------------------
-# Page config
-# -------------------------------
+
+# Page configuration
 st.set_page_config(
     page_title="Movie Recommender",
     page_icon="🎬",
     layout="wide"
 )
 
-# -------------------------------
-# Paths
-# -------------------------------
-BASE_DIR = Path(__file__).resolve().parent
-METADATA_PATH = BASE_DIR / "metadata"       # inside app/
-DATA_PATH = BASE_DIR.parent / "data"        # outside app/
 
-# -------------------------------
-# Load metadata (pickles)
-# -------------------------------
+# Paths
+BASE_DIR = Path(__file__).resolve().parent
+METADATA_PATH = BASE_DIR / "metadata"      
+DATA_PATH = BASE_DIR.parent / "data"       
+
+
+# Load metadata
 @st.cache_data
 def load_metadata():
     movies_content = pd.read_pickle(METADATA_PATH / "movies_content.pkl")
-    tfidf_matrix = joblib.load(METADATA_PATH / "tfidf_matrix.pkl")  # use joblib for matrices
+    tfidf_matrix = joblib.load(METADATA_PATH / "tfidf_matrix.pkl")  
     return movies_content, tfidf_matrix
 
 movies_content, tfidf_matrix = load_metadata()
 
-# -------------------------------
-# Movie card UI function
-# -------------------------------
+# Movie cards
 def movie_card(title, genres, score):
     with st.container():
         st.subheader(title)
@@ -40,9 +35,7 @@ def movie_card(title, genres, score):
         st.progress(min(score, 1.0))
         st.caption(f"Similarity: {score*100:.0f}%")
 
-# -------------------------------
 # Recommendation logic
-# -------------------------------
 def recommend(movie_title, top_n=10):
     idx = movies_content[movies_content["title"] == movie_title].index[0]
 
@@ -57,9 +50,7 @@ def recommend(movie_title, top_n=10):
 
     return indices, scores
 
-# -------------------------------
-# Streamlit UI
-# -------------------------------
+# Streamlit page layout
 st.title("🎬 Movie Recommendation System")
 st.markdown("")
 
