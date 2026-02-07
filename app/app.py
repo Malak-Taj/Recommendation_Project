@@ -1,0 +1,92 @@
+import streamlit as st
+import joblib
+import pandas as pd
+import numpy as np
+import tempfile
+import os
+
+# Page config
+st.set_page_config(
+    page_title="Movie Recommender",
+    page_icon="🎬",
+    layout="wide"
+)
+
+# Path
+METADATA_PATH = r"C:\Users\connect\Downloads\Recommendation_Project\metadata\\"
+
+# Load data
+@st.cache_resource
+def load_data():
+    movies_content = pd.read_pickle(METADATA_PATH + "movies_content.pkl")
+    tfidf_matrix = joblib.load(METADATA_PATH + "tfidf_matrix.pkl")
+    return movies_content, tfidf_matrix
+
+movies_content, tfidf_matrix = load_data()
+
+
+# Movie card
+def movie_card(title, genres, score):
+    with st.container():
+        st.subheader(title)
+        st.caption(f"🎭 Genres: {genres}")
+        st.progress(min(score,1.0))
+        st.caption(f"Similarity: {score*100:.0f}%")
+
+
+
+# Recommendation logic 
+def recommend(movie_title, top_n=10):  # 10 recommendations
+    idx = movies_content[movies_content["title"] == movie_title].index[0]
+
+    # cosine similarity using sparse dot
+    similarity_scores = tfidf_matrix.dot(tfidf_matrix[idx].T).toarray().flatten()
+
+    sim_scores = list(enumerate(similarity_scores))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:top_n+1]
+
+    indices = [i[0] for i in sim_scores]
+    scores = [i[1] for i in sim_scores]
+
+    return indices, scores
+
+
+
+# UI
+st.title("🎬 Movie Recommendation System")
+st.markdown("")
+
+selected_movie = st.selectbox(
+    "Choose a movie you like:",
+    movies_content["title"].values
+)
+
+if st.button("Click To Find Similar Movies"):
+    with st.spinner("Finding similar movies..."):
+        indices, scores = recommend(selected_movie)
+
+    st.subheader("Recommended Movies!")
+
+    # 2 rows of 5 columns
+    cols = st.columns(5)
+    for i in range(5):
+        row = movies_content.iloc[indices[i]]
+        with cols[i]:
+            movie_card(
+                title=row["title"],
+                genres=row.get("genres", "Unknown"),
+                score=scores[i]
+            )
+
+    cols = st.columns(5)
+    for i in range(5, 10):
+        row = movies_content.iloc[indices[i]]
+        with cols[i - 5]:
+            movie_card(
+                title=row["title"],
+                genres=row.get("genres", "Unknown"),
+                score=scores[i]
+            )
+
+else:
+    st.info("🔎 Please select a movie and click the button to get recommendations.")
